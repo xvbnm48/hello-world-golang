@@ -1,4 +1,4 @@
-package main
+package render
 
 import (
 	"fmt"
@@ -6,7 +6,8 @@ import (
 	"text/template"
 )
 
-func renderTemplate(w http.ResponseWriter, html string) {
+// renderTemplate using html/tamplate
+func RenderTemplate(w http.ResponseWriter, html string) {
 	parsedTemplate, _ := template.ParseFiles("./template/" + html)
 	err := parsedTemplate.Execute(w, nil)
 
