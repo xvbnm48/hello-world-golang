@@ -1,7 +1,9 @@
 package render
 
 import (
+	"bytes"
 	"fmt"
+	"log"
 	"net/http"
 	"path/filepath"
 	"text/template"
@@ -11,21 +13,31 @@ var functions = template.FuncMap{}
 
 // renderTemplate using html/tamplate
 func RenderTemplate(w http.ResponseWriter, tmpl string) {
-	_, err := RenderTemplateTest(w)
-	if err != nil {
-		fmt.Println("getting error cache : ", err)
-	}
 
-	parsedTemplate, _ := template.ParseFiles("./template/" + tmpl)
-	err = parsedTemplate.Execute(w, nil)
+	tc, err := CreateTemplateTest()
 
 	if err != nil {
-		fmt.Println("error parsing template :", err)
-		return
+		log.Fatal(err)
 	}
+
+	t, ok := tc[tmpl]
+
+	if !ok {
+		log.Fatal(err)
+	}
+
+	buf := new(bytes.Buffer)
+	_ = t.Execute(buf, nil)
+
+	_, err = buf.WriteTo(w)
+	if err != nil {
+		fmt.Println("error writing template to browser:", err)
+	}
+
 }
 
-func RenderTemplateTest(w http.ResponseWriter) (map[string]*template.Template, error) {
+// CreateTemplateTest created a template cache as map
+func CreateTemplateTest() (map[string]*template.Template, error) {
 	myCache := map[string]*template.Template{}
 
 	pages, err := filepath.Glob("./template/*.page.tmpl")
@@ -35,7 +47,6 @@ func RenderTemplateTest(w http.ResponseWriter) (map[string]*template.Template, e
 
 	for _, page := range pages {
 		name := filepath.Base(page)
-		fmt.Println("page is currently : ", page)
 		ts, err := template.New(name).Funcs(functions).ParseFiles(page)
 		if err != nil {
 			return myCache, err
